@@ -11,6 +11,11 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 function tici_init {
   sudo su -c 'echo "performance" > /sys/class/devfreq/soc:qcom,memlat-cpu0/governor'
   sudo su -c 'echo "performance" > /sys/class/devfreq/soc:qcom,memlat-cpu4/governor'
+
+  # init the DSP
+  sudo systemctl start adsprpcd
+  sudo systemctl start cdsp
+  sudo chmod 666 /dev/adsprpc-smd
 }
 
 function two_init {

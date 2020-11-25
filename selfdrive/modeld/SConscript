@@ -12,18 +12,12 @@ common_src = [
   "transforms/transform.cc"
 ]
 
+thneed_src = ["thneed/thneed.cc"]
+
 if arch == "aarch64":
   libs += ['gsl', 'CB', 'gnustl_shared']
-  if not TEST_THNEED:
-    common_src += ["thneed/thneed.cc"]
-    lenv['CFLAGS'].append("-DUSE_THNEED")
-    lenv['CXXFLAGS'].append("-DUSE_THNEED")
 elif arch == "larch64":
   libs += ['gsl', 'CB', 'pthread', 'dl']
-  if not TEST_THNEED:
-    common_src += ["thneed/thneed.cc"]
-    lenv['CFLAGS'].append("-DUSE_THNEED")
-    lenv['CXXFLAGS'].append("-DUSE_THNEED")
 else:
   libs += ['pthread']
 
@@ -44,6 +38,14 @@ else:
     del libs[libs.index('symphony-cpu')]
     del common_src[common_src.index('runners/snpemodel.cc')]
 
+tenv = lenv.Clone()
+if not TEST_THNEED and arch in ["aarch64", "larch64"]:
+  tenv['CFLAGS'].append("-DUSE_THNEED")
+  tenv['CXXFLAGS'].append("-DUSE_THNEED")
+  thneed = tenv.Object(thneed_src)
+else:
+  thneed = []
+
 common = lenv.Object(common_src)
 
 lenv.Program('_dmonitoringmodeld', [
@@ -51,10 +53,10 @@ lenv.Program('_dmonitoringmodeld', [
     "models/dmonitoring.cc",
   ]+common, LIBS=libs)
 
-lenv.Program('_modeld', [
+tenv.Program('_modeld', [
     "modeld.cc",
     "models/driving.cc",
-  ]+common, LIBS=libs)
+  ]+common+thneed, LIBS=libs)
 
 if TEST_THNEED:
   lenv.Program('thneed/debug/_thneed', [
